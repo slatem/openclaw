@@ -7,6 +7,7 @@ import { removeAckReactionAfterReply } from "../../../channels/ack-reactions.js"
 import { logAckFailure, logTypingFailure } from "../../../channels/logging.js";
 import { createReplyPrefixOptions } from "../../../channels/reply-prefix.js";
 import { createTypingCallbacks } from "../../../channels/typing.js";
+import { resolveMarkdownTableMode } from "../../../config/markdown-tables.js";
 import { resolveStorePath, updateLastRoute } from "../../../config/sessions.js";
 import { danger, logVerbose, shouldLogVerbose } from "../../../globals.js";
 import { removeSlackReaction } from "../../actions.js";
@@ -69,6 +70,11 @@ export async function dispatchPreparedSlackMessage(prepared: PreparedSlackMessag
   const { ctx, account, message, route } = prepared;
   const cfg = ctx.cfg;
   const runtime = ctx.runtime;
+  const tableMode = resolveMarkdownTableMode({
+    cfg,
+    channel: "slack",
+    accountId: account.accountId,
+  });
 
   if (prepared.isDirectMessage) {
     const sessionCfg = cfg.session;
@@ -190,6 +196,7 @@ export async function dispatchPreparedSlackMessage(prepared: PreparedSlackMessag
       textLimit: ctx.textLimit,
       replyThreadTs,
       replyToMode: ctx.replyToMode,
+      tableMode,
     });
     replyPlan.markSent();
   };

@@ -5,7 +5,7 @@ import { isSilentReplyText, SILENT_REPLY_TOKEN } from "../../auto-reply/tokens.j
 import type { ReplyPayload } from "../../auto-reply/types.js";
 import type { MarkdownTableMode } from "../../config/types.base.js";
 import type { RuntimeEnv } from "../../runtime.js";
-import { markdownToSlackMrkdwnChunks } from "../format.js";
+import { markdownToSlackMrkdwn, markdownToSlackMrkdwnChunks } from "../format.js";
 import { sendMessageSlack } from "../send.js";
 
 export async function deliverReplies(params: {
@@ -17,6 +17,7 @@ export async function deliverReplies(params: {
   textLimit: number;
   replyThreadTs?: string;
   replyToMode: "off" | "first" | "all";
+  tableMode?: MarkdownTableMode;
 }) {
   for (const payload of params.replies) {
     // Keep reply tags opt-in: when replyToMode is off, explicit reply tags
@@ -34,7 +35,9 @@ export async function deliverReplies(params: {
       if (!trimmed || isSilentReplyText(trimmed, SILENT_REPLY_TOKEN)) {
         continue;
       }
-      await sendMessageSlack(params.target, trimmed, {
+      // Apply Slack mrkdwn formatting including table conversion
+      const formatted = markdownToSlackMrkdwn(trimmed, { tableMode: params.tableMode });
+      await sendMessageSlack(params.target, formatted, {
         token: params.token,
         threadTs,
         accountId: params.accountId,
